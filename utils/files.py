@@ -1,11 +1,13 @@
 import os
 import json
 import asyncio
-from .myLog import _log
+from .myLog import _log,get_time
 
 
 FlieSaveLock = asyncio.Lock()
 """用于日志文件写入的锁"""
+StartTime = get_time()
+"""机器人启动时间"""
 
 
 def write_file(path: str, value):

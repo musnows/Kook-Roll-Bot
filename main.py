@@ -62,14 +62,11 @@ async def help(msg:Message,*arg):
         text+= " 如上命令将开启一个奖品为通行证，获奖人数为2，为期2天的抽奖，并且只有指定的角色组才可以参加抽奖。\n"
         text+= "**注意事项：**\n"
         text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n 3.抽奖天数可以设置为小数，比如半天设置为0.5\n"
-        cm = CardMessage()
-        c = Card(
-            Module.Header(f"开奖菈 帮助命令"),
-            Module.Divider(),
-            Module.Section(Element.Text(text,Types.Text.KMD))
-        )
-        cm.append(c)
+        cm = await get_card_msg(text,
+                                sub_text=f"开机于：{StartTime} | 开源仓库：[Github]()",
+                                header_text="抽奖菈 帮助命令")
         await msg.reply(cm)
+        _log.info(f"Au:{msg.author_id} | help reply")
     except Exception as result:
         _log.exception(f"Err in help")
         cm = await get_card_msg(f"ERR! [{get_time()}] help",err_card=True)
