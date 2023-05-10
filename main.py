@@ -70,6 +70,8 @@ async def get_rid_list(arg):
     """通过参数元组获取角色id列表（int列表）"""
     temp_list = []
     for s in arg:
+        if "met" in s: # 全体成员(met)all(met)或者在线成员(met)here(met)，或者at的是用户
+            continue
         temp_list.append(int(s.replace("(rol)","")))
     return temp_list
 
