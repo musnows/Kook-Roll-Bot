@@ -46,13 +46,14 @@ async def alive_check(msg:Message,*arg):
         log_msg(msg)
         await msg.reply(f"bot alive here")# 回复
     except:
-        _log.exception(f"Err in help")
+        _log.exception(f"Err in alive")
 
 # 帮助命令
 @bot.command(name='rdh',aliases=['rdhelp'],case_sensitive=False)
 async def help(msg:Message,*arg):
     try:
         log_msg(msg)
+        # 信息主体
         text = "" if not "notice" in config else config["notice"]
         text+= "\n「/alive」看看bot是否在线\n"
         text+= "「/rd \"奖品名字\" 奖品个数 抽奖天数 @角色组」开奖\n"
@@ -62,9 +63,10 @@ async def help(msg:Message,*arg):
         text+= " 如上命令将开启一个奖品为通行证，获奖人数为2，为期2天的抽奖，并且只有指定的角色组才可以参加抽奖。\n"
         text+= "**注意事项：**\n"
         text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n 3.抽奖天数可以设置为小数，比如半天设置为0.5\n"
-        cm = await get_card_msg(text,
-                                sub_text=f"开机于：{StartTime} | 开源仓库：[Github]()",
-                                header_text="抽奖菈 帮助命令")
+        # 小字
+        sub_text = f"开机于：{StartTime}  |  开源仓库：[Github](https://github.com/musnows/Kook-Roll-Bot)\n"
+        sub_text+= "如有问题，请加入帮助频道咨询：[邀请链接](https://kook.top/gpbTwZ)"
+        cm = await get_card_msg(text,sub_text,header_text="抽奖菈 帮助命令")
         await msg.reply(cm)
         _log.info(f"Au:{msg.author_id} | help reply")
     except Exception as result:
