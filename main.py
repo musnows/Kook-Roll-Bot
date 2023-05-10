@@ -270,7 +270,7 @@ async def roll_check_task():
             # 3.抽奖时间到了,结束抽奖
             vnum = rinfo['item']['num'] # 奖品数量
             join_sz = len(RollLogTemp['msg'][msg_id]['user']) # 参与人数
-            RollLog['data'][guild_id][msg_id]['join'] = join_sz
+            RollLog['data'][guild_id][msg_id]['join']['count'] = join_sz
             #   人数大于奖品数量
             ran = []
             if join_sz > vnum:
@@ -278,13 +278,13 @@ async def roll_check_task():
             else:  # 生成一个从0到len-1的列表 如果只有一个用户，生成的是[0]
                 ran = list(range(join_sz))
             #   开始遍历
-            text = "恭喜 "
+            text = "🎉 恭喜 "
             for index in ran:
                 user_id = RollLogTemp['msg'][msg_id]['user'][index]
                 user_str = f"(met){user_id}(met) "
                 text += user_str
                 RollLog['data'][guild_id][msg_id]['join']['reward_user'].append(user_id)
-            text += "获得了本次奖品！"
+            text += "获得了本次奖品！🎉"
 
             #  删除抽奖消息
             del RollLog['msg'][msg_id]
