@@ -1,0 +1,9 @@
+{
+    "token":"bot webhook/websocket token",
+    "verify_token":"bot webhook verify_token",
+    "encrypt":"bot webhook encrypt token",
+    "webhook_port":40002,
+    "ws":true,
+    "debug_ch":"bot debug channel id 发送日志信息的文字频道id",
+    "notice":"在帮助命令中包含的公告信息"
+}

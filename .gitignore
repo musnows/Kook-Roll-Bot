@@ -1,0 +1,5 @@
+# 忽略配置文件
+config/
+# 机器人日志和py
+__pycache__/
+*.log
