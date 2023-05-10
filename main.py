@@ -1,4 +1,3 @@
-import json
 import aiohttp
 import asyncio
 import traceback
@@ -7,9 +6,10 @@ import os
 from khl import Bot,Cert, Message,PrivateMessage,requester
 from khl.card import Card,CardMessage,Types,Module,Element
 from aiohttp import client_exceptions
+from datetime import datetime,timedelta
 
 from utils.files import *
-from utils.myLog import get_time,log_flush,log_msg,_log
+from utils.myLog import get_time,get_time_str_from_stamp,log_msg,_log
 
 # 用读取来的 config 初始化 bot
 bot = Bot(token=config['token']) # websocket
@@ -56,7 +56,8 @@ async def help(msg:Message,*arg):
         # 信息主体
         text = "" if not "notice" in config else config["notice"]
         text+= "\n「/alive」看看bot是否在线\n"
-        text+= "「/rd \"奖品名字\" 奖品个数 抽奖天数 @角色组」开奖\n"
+        text+= "「/rd \"奖品名字\" 奖品个数 抽奖天数 @角色组」按天数开奖\n"
+        text+= "「/rh \"奖品名字\" 奖品个数 抽奖小时 @角色组」按小时开奖\n"
         text+= "```\n"
         text+= "/rd \"通行证一个\" 2 2 @角色组1 @角色组2\n"
         text+= "```\n"
@@ -76,9 +77,26 @@ async def help(msg:Message,*arg):
 
 ################################################################################
 
+async def roll_handler(msg:Message,item_name:str,item_num:int,roll_sec:float,rid_list=[]):
+    """
+    - item_name: 商品名字
+    - item_num : 商品个数
+    - roll_sec: 抽奖秒数
+    - rid_list: 可参与抽奖用户的角色id列表
+    """
+    c = Card()
+    c.append(Module.Countdown(datetime.now() + timedelta(seconds=roll_sec), mode=Types.CountdownMode.SECOND))
+    return
 
+@bot.command(name='rd',case_sensitive=False)
+async def roll_day_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
+    """抽奖天数命令"""
+    return
 
-
+@bot.command(name='rh',case_sensitive=False)
+async def roll_hour_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
+    """抽奖小时命令"""
+    return
 
 ################################################################################
 

@@ -15,6 +15,11 @@ def get_time(format_str='%y-%m-%d %H:%M:%S'):
     return beijing_time.strftime(format_str)
     # return time.strftime("%y-%m-%d %H:%M:%S", time.localtime())
 
+def get_time_str_from_stamp(timestamp:float,format_str='%y-%m-%d %H:%M:%S'):
+    """通过时间戳获取当前的本地时间，格式 23-01-01 00:00:00"""
+    a = datetime.fromtimestamp(timestamp,tz=timezone(timedelta(hours=8)))
+    return a.strftime(format_str)
+
 def log_flush():
     """刷新输出缓冲区"""
     sys.stdout.flush() # 刷新缓冲区
