@@ -63,7 +63,7 @@ try:
         os._exit(1)  # err,退出进程
 
     # 创建日志文件成功，打开
-    LinkLog = open_file(RollLogPath)
+    RollLog = open_file(RollLogPath)
     """日志文件 {"data":{},"msg":{}}"""
 
     _log.info(f"[BOT.INIT] open log.files success!")
@@ -77,7 +77,7 @@ async def write_roll_log(log_info=""):
     try:
         global FlieSaveLock
         async with FlieSaveLock:
-            write_file(RollLogPath,LinkLog)
+            write_file(RollLogPath,RollLog)
             _log.info(f"[write.file] RollLog to {RollLogPath} | {log_info}")
     except:
         _log.exception(f"Err when write file")
