@@ -2,6 +2,8 @@ import aiohttp
 import asyncio
 import traceback
 import os
+import copy
+import random
 
 from khl import Bot,Cert, Message,requester,Event,EventTypes
 from khl.card import Card,CardMessage,Types,Module,Element
@@ -116,9 +118,8 @@ async def roll_start_log(guild_id:str,channel_id:str,msg_id:str,user_id:str,
         "user_id": user_id,
         "channel_id":channel_id,
         "rid_list":rid_list,
-        "is_end":False,
         "join":{
-            "count":0,
+            "count":-1,
             "reward_user":[]
         }
     }
@@ -180,7 +181,7 @@ async def emoji_reaction_event(b:Bot,e:Event):
         # 判断用户id，在通知用户后退出
         if user_id in RollLog['msg'][msg_id]['user']:
             cm = await get_card_msg(f"{text}\n您已成功参加了此次抽奖，请勿多次操作！")
-            return await ch.send(cm)
+            return await ch.send(cm,temp_target_id=user_id)
 
         # 此次抽奖的信息
         guild_id = RollLog['msg'][msg_id]['guild_id']
@@ -196,8 +197,8 @@ async def emoji_reaction_event(b:Bot,e:Event):
             # 如果为假，代表没有这个权限，不给参加
             if not role_flag:
                 _log.info(f"[roll] Au:{user_id} | Msg:{msg_id} | not in roles")
-                cm = await get_card_msg(f"{text}\n您没有参与此次抽奖的权限组！")
-                return await ch.send(cm)
+                cm = await get_card_msg(f"{text}\n抱歉，您没有参与此次抽奖的权限！")
+                return await ch.send(cm,temp_target_id=user_id)
 
         # 用户id不在，添加用户并通知
         RollLog['msg'][msg_id]['user'].append(user_id) 
@@ -218,10 +219,56 @@ async def emoji_reaction_event(b:Bot,e:Event):
         _log.exception(f"Err in roll event | {e.body}")
 
 
-@bot.task.add_interval(seconds=70)
+@bot.task.add_interval(seconds=57)
 async def roll_check_task():
     """检查抽奖是否结束的task"""
-    return
+    msg_id = "none"
+    try:
+        _log.info("[BOT.TASK] roll check begin")
+        global RollLog
+        RollLogTemp = copy.deepcopy(RollLog)
+        for msg_id in RollLogTemp['msg']:
+            guild_id = RollLogTemp['msg'][msg_id]['guild_id'] # 服务器id
+            rinfo = RollLogTemp['data'][guild_id][msg_id] 
+            # 1.已经结束了，重大err
+            if rinfo['join']['count'] != -1: 
+                del RollLog['msg'][msg_id] # 只删除消息id，不修改info
+                _log.critical(f"G:{guild_id} | Msg:{msg_id} | roll already end!")
+                continue
+            cur_time = datetime.now().timestamp()
+            # 2.没有超过结束时间，继续
+            if cur_time < rinfo['end_time']: 
+                continue 
+            # 3.抽奖时间到了,结束抽奖
+            vnum = rinfo['item']['num'] # 奖品数量
+            join_sz = len(RollLogTemp['msg'][msg_id]['user']) # 参与人数
+            RollLog['data'][guild_id][msg_id]['join'] = join_sz
+            #   人数大于奖品数量
+            ran = []
+            if join_sz > vnum:
+                ran = random.sample(range(0, join_sz), vnum)  # 生成n个随机数
+            else:  # 生成一个从0到len-1的列表 如果只有一个用户，生成的是[0]
+                ran = list(range(join_sz))
+            #   开始遍历
+            text = "恭喜 "
+            for index in ran:
+                user_id = RollLogTemp['msg'][msg_id]['user'][index]
+                user_str = f"(met){user_id}(met) "
+                text += user_str
+                RollLog['data'][guild_id][msg_id]['join']['reward_user'].append(user_id)
+            text += "获得了本次奖品！"
+
+            #  删除抽奖消息
+            del RollLog['msg'][msg_id]
+            # 结束，发送信息
+            cm = await get_card_msg(text,header_text=f"开奖菈！奖品「{rinfo['item']['name']}」")
+            ch = await bot.client.fetch_public_channel(rinfo['channel_id']) 
+            await ch.send(cm)
+            _log.info(f"G:{guild_id} | Msg:{msg_id} | roll end success")
+
+        _log.info("[BOT.TASK] roll check  end")
+    except:
+        _log.exception(f"Err in roll check | {msg_id}")
 
 ################################################################################
 
