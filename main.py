@@ -202,7 +202,14 @@ async def emoji_reaction_event(b:Bot,e:Event):
 
         # 用户id不在，添加用户并通知
         RollLog['msg'][msg_id]['user'].append(user_id) 
-        text+= f"\n[添加回应 {e.body['emoji']['id']}] 抽奖参与成功！"
+        emoji = e.body['emoji']['id'] # 1通用emoji
+        str_index = e.body['emoji']['id'].find('/')
+        # 2找到了/，且没有第二个/，说明是服务器表情
+        if str_index != -1 and e.body['emoji']['id'].find('/',str_index+1) == -1:
+            emoji = f"(emj){e.body['emoji']['name']}(emj)[{e.body['emoji']['id']}]"
+        elif str_index != -1: # 3用户表情
+            emoji = f"`{e.body['emoji']['id']}`"
+        text+= f"\n「添加回应 {emoji}」抽奖参与成功！"
         cm = await get_card_msg(text)
         await ch.send(cm) # 发送信息
         # 重新获取消息卡片并更新
