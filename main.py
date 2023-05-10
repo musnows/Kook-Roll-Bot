@@ -37,32 +37,51 @@ async def alive_check(msg:Message,*arg):
     except:
         _log.exception(f"Err in alive")
 
+async def help_card():
+    # 信息主体
+    text = "" if not "notice" in config else config["notice"]
+    text+= "\n「/alive」看看bot是否在线\n"
+    text+= "「/rd \"奖品名字\" 奖品个数 抽奖天数 @角色组」按天数开奖\n"
+    text+= "「/rh \"奖品名字\" 奖品个数 抽奖小时 @角色组」按小时开奖\n"
+    text+= "```\n"
+    text+= "/rd \"通行证一个\" 2 2 @角色组1 @角色组2\n"
+    text+= "```\n"
+    text+= " 如上命令将开启一个奖品为通行证，获奖人数为2，为期2天的抽奖，并且只有指定的角色组才可以参加抽奖。\n"
+    text+= "**注意事项：**\n"
+    text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n"
+    text+= " 3.抽奖天数/小时可以设置为小数，比如半天设置为0.5\n 4.请勿在抽奖中@用户，否则视作全体成员抽奖\n"
+    # 小字
+    sub_text = f"开机于：{StartTime}  |  开源仓库：[Github](https://github.com/musnows/Kook-Roll-Bot)\n"
+    sub_text+= "如有问题，请加入帮助频道咨询：[邀请链接](https://kook.top/gpbTwZ)"
+    return await get_card_msg(text,sub_text,header_text="抽奖菈 帮助命令")
+
 # 帮助命令
 @bot.command(name='rdh',aliases=['rdhelp'],case_sensitive=False)
-async def help(msg:Message,*arg):
+async def help_cmd(msg:Message,*arg):
     try:
         log_msg(msg)
-        # 信息主体
-        text = "" if not "notice" in config else config["notice"]
-        text+= "\n「/alive」看看bot是否在线\n"
-        text+= "「/rd \"奖品名字\" 奖品个数 抽奖天数 @角色组」按天数开奖\n"
-        text+= "「/rh \"奖品名字\" 奖品个数 抽奖小时 @角色组」按小时开奖\n"
-        text+= "```\n"
-        text+= "/rd \"通行证一个\" 2 2 @角色组1 @角色组2\n"
-        text+= "```\n"
-        text+= " 如上命令将开启一个奖品为通行证，获奖人数为2，为期2天的抽奖，并且只有指定的角色组才可以参加抽奖。\n"
-        text+= "**注意事项：**\n"
-        text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n 3.抽奖天数可以设置为小数，比如半天设置为0.5\n"
-        # 小字
-        sub_text = f"开机于：{StartTime}  |  开源仓库：[Github](https://github.com/musnows/Kook-Roll-Bot)\n"
-        sub_text+= "如有问题，请加入帮助频道咨询：[邀请链接](https://kook.top/gpbTwZ)"
-        cm = await get_card_msg(text,sub_text,header_text="抽奖菈 帮助命令")
-        await msg.reply(cm)
+        await msg.reply(await help_card())
         _log.info(f"Au:{msg.author_id} | help reply")
     except Exception as result:
         _log.exception(f"Err in help")
-        cm = await get_card_msg(f"ERR! [{get_time()}] help",err_card=True)
-        await msg.reply(cm)
+        await msg.reply(await get_card_msg(f"ERR! [{get_time()}] help",err_card=True))
+
+@bot.on_message()
+async def at_help_cmd(msg:Message):
+    """at机器时发送帮助命令"""
+    try:
+        # kook系统通知，忽略
+        if msg.author_id == "3900775823": return
+        # 要求只是存粹at机器人的时候才回复，字数大概为20字
+        elif len(msg.content) >= 22: return
+        # 获取机器人的用户对象
+        cur_bot = await bot.client.fetch_me()
+        if f"(met){cur_bot.id}(met)" in msg.content:
+            log_msg(msg)
+            await msg.reply(await help_card())
+            _log.info(f"Au:{msg.author_id} | at_help reply")
+    except:
+        _log.exception(f"Err in at_help")
 
 ################################################################################
 
