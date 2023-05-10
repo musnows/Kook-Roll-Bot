@@ -232,7 +232,7 @@ async def emoji_reaction_event(b:Bot,e:Event):
             emoji = f"`{e.body['emoji']['id']}`"
         text+= f"\n「添加回应 {emoji}」抽奖参与成功！"
         cm = await get_card_msg(text)
-        await ch.send(cm) # 发送信息
+        await ch.send(cm,temp_target_id=user_id) # 发送信息
         # 重新获取消息卡片并更新
         time_diff = rinfo['end_time'] - datetime.now().timestamp()
         # 获取卡片
@@ -321,7 +321,7 @@ async def botmarket_ping_task():
     async with aiohttp.ClientSession() as session:
         await session.post(api, headers=headers)
 # 定时写文件
-@bot.task.add_interval(minutes=1)
+@bot.task.add_interval(minutes=4)
 async def save_log_file_task():
     await write_roll_log(log_info="[BOT.TASK]")
 
