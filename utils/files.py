@@ -52,7 +52,7 @@ config = open_file('./config/config.json')
 """机器人配置文件"""
 
 # 打开日志文件
-RollLogPath = './config/linklog.json'
+RollLogPath = './config/rollLog.json'
 """日志文件路径"""
 RollLog = {"data":{},"msg":{}}
 """日志文件 {"data":{},"msg":{}}"""

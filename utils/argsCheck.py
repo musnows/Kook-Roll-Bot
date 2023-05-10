@@ -1,7 +1,9 @@
 import traceback
+import json
 
-from khl import Message,Bot
+from khl import Message,Bot,ChannelPrivacyTypes
 from khl.card import Card,CardMessage,Module,Element,Types
+from typing import Union
 
 from .files import config,_log
 
@@ -18,6 +20,20 @@ async def get_card_msg(text:str,sub_text="",header_text="",err_card=False):
     if sub_text != "":
         c.append(Module.Context(Element.Text(sub_text,Types.Text.KMD)))
     return CardMessage(c)
+
+async def upd_card(bot:Bot,msg_id: str,content,target_id='',
+                    channel_type: Union[ChannelPrivacyTypes, str] = 'public'):
+    """更新卡片消息"""
+    content = json.dumps(content)
+    data = {'msg_id': msg_id, 'content': content}
+    if target_id != '':
+        data['temp_target_id'] = target_id
+    if channel_type == 'public' or channel_type == ChannelPrivacyTypes.GROUP:
+        result = await bot.client.gate.request('POST', 'message/update', data=data)
+    else:
+        result = await bot.client.gate.request('POST', 'direct-message/update', data=data)
+    return result
+
 
 def is_positive_int(num:str):
     """检查传入的字符串是否为正整数"""
