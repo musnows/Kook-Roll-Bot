@@ -55,7 +55,7 @@ async def has_admin_rol(bot:Bot,user_id:str, guild_id:str):
 
 async def roll_args_check(bot:Bot,msg:Message,num:str,roll_day:str):
     """检查抽奖参数是否正确"""
-    if not has_admin_rol(bot,msg.author_id,msg.ctx.guild.id):
+    if not await has_admin_rol(bot,msg.author_id,msg.ctx.guild.id):
         _log.info(f"Au:{msg.author_id} | invalid user {roll_day}")
         await msg.reply(await get_card_msg("您必须拥有本频道管理员权限才能执行抽奖"))
         return False
