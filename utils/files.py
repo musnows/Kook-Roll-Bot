@@ -54,8 +54,8 @@ config = open_file('./config/config.json')
 # 打开日志文件
 RollLogPath = './config/linklog.json'
 """日志文件路径"""
-RollLog = {"data":{}}
-"""日志文件 {"data":{}}"""
+RollLog = {"data":{},"msg":{}}
+"""日志文件 {"data":{},"msg":{}}"""
 
 try:
     # 自动创建日志文件
@@ -64,7 +64,7 @@ try:
 
     # 创建日志文件成功，打开
     LinkLog = open_file(RollLogPath)
-    """日志文件 {"data":{}}"""
+    """日志文件 {"data":{},"msg":{}}"""
 
     _log.info(f"[BOT.INIT] open log.files success!")
 except:

@@ -10,6 +10,7 @@ from datetime import datetime,timedelta
 
 from utils.files import *
 from utils.myLog import get_time,get_time_str_from_stamp,log_msg,_log
+from utils.argsCheck import get_card_msg,roll_args_check
 
 # 用读取来的 config 初始化 bot
 bot = Bot(token=config['token']) # websocket
@@ -24,20 +25,6 @@ CmdLock = asyncio.Lock()
 """配置命令上锁"""
 
 #####################################################################################
-
-async def get_card_msg(text:str,sub_text="",header_text="",err_card=False):
-    """获取一个简单卡片的函数"""
-    c = Card()
-    if header_text !="":
-        c.append(Module.Header(header_text))
-        c.append(Module.Divider())
-    if err_card:# 错误卡
-        text += f"\n```\n{traceback.format_exc()}\n```\n"
-    # 总有内容
-    c.append(Module.Section(Element.Text(text,Types.Text.KMD)))
-    if sub_text != "":
-        c.append(Module.Context(Element.Text(sub_text,Types.Text.KMD)))
-    return CardMessage(c)
 
 # 查看bot状态
 @bot.command(name='alive',case_sensitive=False)
@@ -77,24 +64,46 @@ async def help(msg:Message,*arg):
 
 ################################################################################
 
-async def roll_handler(msg:Message,item_name:str,item_num:int,roll_sec:float,rid_list=[]):
+async def get_rid_list(arg):
+    """通过参数元组获取角色id列表（str列表）"""
+    temp_list = []
+    for s in arg:
+        temp_list.append(s.replace("(rol)",""))
+    return temp_list
+
+async def roll_handler(msg:Message,item_name:str,item_num:int,roll_sec:float,rid_list = []):
     """
     - item_name: 商品名字
     - item_num : 商品个数
     - roll_sec: 抽奖秒数
     - rid_list: 可参与抽奖用户的角色id列表
     """
-    c = Card()
+    c = Card(Module.Header(f"抽奖菈！奖品「{item_name}」"),Module.Divider())
+    text = f""
+    c.append(Module.Section(Element.Text(text,Types.Text.KMD)))
     c.append(Module.Countdown(datetime.now() + timedelta(seconds=roll_sec), mode=Types.CountdownMode.SECOND))
-    return
+    return CardMessage(c)
 
 @bot.command(name='rd',case_sensitive=False)
 async def roll_day_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
     """抽奖天数命令"""
-    return
+    try:
+        log_msg(msg)
+        if not roll_args_check(bot,msg,num,roll_day): return
+
+        # 获取卡片消息
+        roll_time = float(roll_day) * 24 * 3600 # 一天的秒数
+        rid_list = await get_rid_list(arg)
+        cm = await roll_handler(msg,name,int(num),roll_time,rid_list)
+        await msg.reply(cm,use_quote=False) # 不引用的消息
+        _log.info(f"Au:{msg.author_id} | rd success")
+    except:
+        _log.exception(f"Err in rd | Au:{msg.author_id}")
+        cm = await get_card_msg(f"ERR! [{get_time()}] rd",err_card=True)
+        await msg.reply(cm)
 
 @bot.command(name='rh',case_sensitive=False)
-async def roll_hour_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
+async def roll_hour_cmd(msg:Message,name:str,num:str,roll_hour:str,*arg):
     """抽奖小时命令"""
     return
 
@@ -105,6 +114,7 @@ async def roll_hour_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
 async def startup_task(b:Bot):
     try:
         global debug_ch
+        assert('admin_user' in config)
         # 获取debug频道
         debug_ch = await bot.client.fetch_public_channel(config['debug_ch'])
         _log.info("[BOT.START] fetch debug channel success")

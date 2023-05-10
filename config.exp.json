@@ -5,5 +5,6 @@
     "webhook_port":40002,
     "ws":true,
     "debug_ch":"bot debug channel id 发送日志信息的文字频道id",
-    "notice":"在帮助命令中包含的公告信息"
+    "notice":"在帮助命令中包含的公告信息，若没有请将本字段留空",
+    "admin_user":["机器人管理员用户id"]
 }
