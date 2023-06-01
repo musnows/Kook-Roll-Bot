@@ -150,6 +150,7 @@ async def roll_start_log(guild_id:str,channel_id:str,msg_id:str,user_id:str,
 @bot.command(name='rd',case_sensitive=False)
 async def roll_day_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
     """抽奖天数命令"""
+    cm = "err!"
     try:
         log_msg(msg)
         if not await roll_args_check(bot,msg,num,roll_day): return
@@ -162,14 +163,19 @@ async def roll_day_cmd(msg:Message,name:str,num:str,roll_day:str,*arg):
         await roll_start_log(msg.ctx.guild.id,msg.ctx.channel.id,
                             send_msg['msg_id'],msg.author_id,name,int(num),roll_time,rid_list)
         _log.info(f"Au:{msg.author_id} | rd success")
-    except:
+    except Exception as result:
         _log.exception(f"Err in rd | Au:{msg.author_id}")
-        cm = await get_card_msg(f"ERR! [{get_time()}] rd",err_card=True)
+        if '没有权限' in str(result):
+            cm = await get_card_msg(f"机器人没有权限获取您服务器的角色列表，请检查机器人是否已拥有管理员权限！",sub_text=str(result))
+            _log.info(f"Au:{msg.author_id} | rd '没有权限' inform")
+        else:
+            cm = await get_card_msg(f"ERR! [{get_time()}] rd",err_card=True)
         await msg.reply(cm)
 
 @bot.command(name='rh',case_sensitive=False)
 async def roll_hour_cmd(msg:Message,name:str,num:str,roll_hour:str,*arg):
     """抽奖小时命令"""
+    cm = "err!"
     try:
         log_msg(msg)
         if not await roll_args_check(bot,msg,num,roll_hour): return
@@ -182,9 +188,13 @@ async def roll_hour_cmd(msg:Message,name:str,num:str,roll_hour:str,*arg):
         await roll_start_log(msg.ctx.guild.id,msg.ctx.channel.id,
                              send_msg['msg_id'],msg.author_id,name,int(num),roll_time,rid_list)
         _log.info(f"Au:{msg.author_id} | rh success")
-    except:
-        _log.exception(f"Err in rd | Au:{msg.author_id}")
-        cm = await get_card_msg(f"ERR! [{get_time()}] rd",err_card=True)
+    except Exception as result:
+        _log.exception(f"Err in rh | Au:{msg.author_id}")
+        if '没有权限' in str(result):
+            cm = await get_card_msg(f"机器人没有权限获取您服务器的角色列表，请检查机器人是否已拥有管理员权限！",sub_text=str(result))
+            _log.info(f"Au:{msg.author_id} | rh '没有权限' inform")
+        else:
+            cm = await get_card_msg(f"ERR! [{get_time()}] rd",err_card=True)
         await msg.reply(cm)
 
 
