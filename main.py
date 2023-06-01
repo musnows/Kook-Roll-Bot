@@ -233,34 +233,48 @@ async def emoji_reaction_event(b:Bot,e:Event):
 
         # 用户id不在，添加用户并通知
         RollLog['msg'][msg_id]['user'].append(user_id) 
-        emoji = e.body['emoji']['id'] # 1通用emoji
+        # - 1：通用emoji
+        emoji = e.body['emoji']['id'] 
         str_index = e.body['emoji']['id'].find('/')
-        # 2找到了/，且没有第二个/，说明是服务器表情
+        # - 2：找到了/，且没有第二个/，说明是服务器表情
         if str_index != -1 and e.body['emoji']['id'].find('/',str_index+1) == -1:
             emoji = f"(emj){e.body['emoji']['name']}(emj)[{e.body['emoji']['id']}]"
-        elif str_index != -1: # 3用户表情
+        # - 3：用户表情，发送原始ID
+        elif str_index != -1: 
             emoji = f"`{e.body['emoji']['id']}`"
         text+= f"\n「添加回应 {emoji}」抽奖参与成功！"
         cm = await get_card_msg(text)
-        await ch.send(cm,temp_target_id=user_id) # 发送信息
-        # 重新获取消息卡片并更新
-        time_diff = rinfo['end_time'] - datetime.now().timestamp()
-        # 获取卡片
-        cm = await roll_card_msg(rinfo['user_id'],
-                                 rinfo['item']['name'],
-                                 rinfo['item']['num'],
-                                 time_diff,rinfo['rid_list'],
-                                 len(RollLog['msg'][msg_id]['user']))
-        await upd_card(bot,msg_id,cm) # 更新卡片
+        await ch.send(cm,temp_target_id=user_id) # 发送信息提示用户
+
+        try:
+            # 再次计算剩余时间
+            time_diff = rinfo['end_time'] - datetime.now().timestamp()
+            # 重新获取消息卡片并更新
+            cm = await roll_card_msg(rinfo['user_id'],
+                                    rinfo['item']['name'],
+                                    rinfo['item']['num'],
+                                    time_diff,rinfo['rid_list'],
+                                    len(RollLog['msg'][msg_id]['user']))
+            await upd_card(bot,msg_id,cm) # 新用户参与抽奖，更新抽奖信息卡片
+        except requester.HTTPRequester.APIRequestFailed as result:
+            if '据不存在或者你没有权限' not in str(result):
+                raise result
+            # 其他情况，说明是没有权限更新的错误，不进行提示，只添加日志
+            _log.error(f"APIRequestFailed! | Au:{user_id} | Msg:{msg_id} | {str(result)}")
+            
+        # 结束用户加入
         _log.info(f"[roll] Au:{user_id} | Msg:{msg_id} | join")
     except:
         _log.exception(f"Err in roll event | {e.body}")
+        text = f"err in roll event\n[e.body]\n```\n{e.body}\n```\n[err msg]\n```\n{traceback.format_exc()}\n```"
+        await debug_ch.send(await get_card_msg(text)) # 未知错误，发送给debug频道
 
 
 @bot.task.add_interval(seconds=57)
 async def roll_check_task():
     """检查抽奖是否结束的task"""
     msg_id = "none"
+    guild_id = "none"
     try:
         _log.info("[BOT.TASK] roll check begin")
         global RollLog
@@ -301,12 +315,18 @@ async def roll_check_task():
             # 结束，发送信息
             cm = await get_card_msg(text,header_text=f"开奖菈！奖品「{rinfo['item']['name']}」")
             ch = await bot.client.fetch_public_channel(rinfo['channel_id']) 
-            await ch.send(cm)
+            await ch.send(cm) # 发送开奖信息
             _log.info(f"G:{guild_id} | Msg:{msg_id} | roll end success")
 
         _log.info("[BOT.TASK] roll check  end")
-    except:
+
+    except Exception as result:
         _log.exception(f"Err in roll check | {msg_id}")
+        text = f"Err in roll check\nG:{guild_id} Msg:{msg_id}\n```\n{traceback.format_exc()}\n```"
+        if '据不存在或者你没有权限' in str(result): # 已知报错，打印较少信息
+            text = f"Err in roll check\nG:{guild_id} Msg:{msg_id}\n```\n{str(result)}\n```"
+        await debug_ch.send(await get_card_msg(text)) # 未知错误，发送给debug频道
+        
 
 ################################################################################
 
