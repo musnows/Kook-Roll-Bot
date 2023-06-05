@@ -362,7 +362,16 @@ async def save_log_file_cmd(msg:Message,*arg):
         if msg.author_id not in config['admin_user']:
             return # 非管理员
         await write_roll_log(log_info="[FFLUSH.CMD]")
-        await msg.reply(f"写入数据文件成功")
+        is_kill = '-kill' in arg # 是否停止运行
+        text = "写入数据文件成功"
+        if is_kill:
+            text += "\n收到`kill`命令，机器人退出"
+        # 发送提示信息
+        await msg.reply(await get_card_msg(text))
+        # 如果有kill停止运行
+        if is_kill:
+            _log.info(f"[KILL] bot exit | Au:{msg.author_id}\n")
+            os._exit(0)
     except:
         _log.exception(f'err in fflush | Au:{msg.author_id}')
         await msg.reply(f"err\n```\n{traceback.format_exc()}\n```")
