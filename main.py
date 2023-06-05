@@ -343,11 +343,11 @@ async def startup_task(b:Bot):
         _log.exception(f"[BOT.START] ERR!")
         os.abort()
 
-# botmarket通信,暂时不启用
-# @bot.task.add_interval(minutes=25)
+# botmarket通信
+@bot.task.add_interval(minutes=25)
 async def botmarket_ping_task():
     api = "http://bot.gekj.net/api/v1/online.bot"
-    headers = {'uuid': '1d266c78-30b2-4299-b470-df0441862711'}
+    headers = {'uuid': 'a5654f65-bd2e-4983-8448-1ffe78e0d3c1'}
     async with aiohttp.ClientSession() as session:
         await session.post(api, headers=headers)
 # 定时写文件
