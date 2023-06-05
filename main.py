@@ -257,7 +257,7 @@ async def emoji_reaction_event(b:Bot,e:Event):
                                     len(RollLog['msg'][msg_id]['user']))
             await upd_card(bot,msg_id,cm) # 新用户参与抽奖，更新抽奖信息卡片
         except requester.HTTPRequester.APIRequestFailed as result:
-            if '据不存在或者你没有权限' not in str(result):
+            if '权限' not in str(result):
                 raise result
             # 其他情况，说明是没有权限更新的错误，不进行提示，只添加日志
             _log.error(f"APIRequestFailed! | Au:{user_id} | Msg:{msg_id} | {str(result)}")
@@ -322,9 +322,9 @@ async def roll_check_task():
 
     except Exception as result:
         _log.exception(f"Err in roll check | {msg_id}")
-        text = f"Err in roll check\nG:{guild_id} Msg:{msg_id}\n```\n{traceback.format_exc()}\n```"
-        if '据不存在或者你没有权限' in str(result): # 已知报错，打印较少信息
-            text = f"Err in roll check\nG:{guild_id} Msg:{msg_id}\n```\n{str(result)}\n```"
+        text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{traceback.format_exc()}\n```"
+        if '权限' in str(result): # 已知报错，打印较少信息
+            text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{str(result)}\n```"
         await debug_ch.send(await get_card_msg(text)) # 未知错误，发送给debug频道
         
 
