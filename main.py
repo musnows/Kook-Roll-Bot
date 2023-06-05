@@ -354,6 +354,18 @@ async def botmarket_ping_task():
 @bot.task.add_interval(minutes=4)
 async def save_log_file_task():
     await write_roll_log(log_info="[BOT.TASK]")
+# 立即写文件
+@bot.command(name='fflush')
+async def save_log_file_cmd(msg:Message,*arg):
+    try:
+        log_msg(msg)
+        if msg.author_id not in config['admin_user']:
+            return # 非管理员
+        await write_roll_log(log_info="[FFLUSH.CMD]")
+        await msg.reply(f"写入数据文件成功")
+    except:
+        _log.exception(f'err in fflush | Au:{msg.author_id}')
+        await msg.reply(f"err\n```\n{traceback.format_exc()}\n```")
 
 # 开机 （如果是主文件就开机）
 if __name__ == '__main__':
