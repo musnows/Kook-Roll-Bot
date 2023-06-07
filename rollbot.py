@@ -267,6 +267,8 @@ async def emoji_reaction_event(b:Bot,e:Event):
     except:
         _log.exception(f"Err in roll event | {e.body}")
         text = f"err in roll event\n[e.body]\n```\n{e.body}\n```\n[err msg]\n```\n{traceback.format_exc()}\n```"
+        if '权限' in str(result) or 'connect' in str(result): # 已知报错，打印较少信息
+            text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{str(result)}\n```"
         await debug_ch.send(await get_card_msg(text)) # 未知错误，发送给debug频道
 
 
