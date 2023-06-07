@@ -32,8 +32,8 @@ pip3 install -r requirements.txt
 
 根据 [config-exp.json](./config.exp.json)，新建一个`config/config.json`文件，在里面写入相对应的字段。
 
-* debug_ch 文字频道id，进kook设置-高级-开启开发者模式，右键频道复制
-* sqlite_enable 是否使用sqlite3来存放违规的邀请链接。如果使用默认的json策略，`可能`会因为json字符串过长而写入磁盘失败。如果你的服务器所安装python支持sqlite3，建议启用。
+* debug_ch 文字频道id，进kook设置-高级-开启开发者模式，右键文字频道-复制ID
+* admin_user 管理员用户ID，同上方式开启开发者模式后，右键频道内用户头像-复制ID
 
 配置完毕以后，就可以运行bot了
 
