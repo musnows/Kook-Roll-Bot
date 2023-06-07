@@ -227,7 +227,7 @@ async def emoji_reaction_event(b:Bot,e:Event):
                     break # 跳出
             # 如果为假，代表没有这个权限，不给参加
             if not role_flag:
-                _log.info(f"[roll] Au:{user_id} | Msg:{msg_id} | not in roles")
+                _log.info(f"[roll.e] Au:{user_id} | Msg:{msg_id} | not in roles")
                 cm = await get_card_msg(f"{text}\n抱歉，您没有参与此次抽奖的权限！")
                 return await ch.send(cm,temp_target_id=user_id)
 
@@ -257,13 +257,13 @@ async def emoji_reaction_event(b:Bot,e:Event):
                                     len(RollLog['msg'][msg_id]['user']))
             await upd_card(bot,msg_id,cm) # 新用户参与抽奖，更新抽奖信息卡片
         except requester.HTTPRequester.APIRequestFailed as result:
-            if '权限' not in str(result):
+            if '权限' not in str(result) or 'json' not in str(result):
                 raise result
             # 其他情况，说明是没有权限更新的错误，不进行提示，只添加日志
-            _log.error(f"APIRequestFailed! | Au:{user_id} | Msg:{msg_id} | {str(result)}")
+            _log.error(f"[roll.e] APIRequestFailed! | Au:{user_id} | Msg:{msg_id} | {str(result)}")
             
         # 结束用户加入
-        _log.info(f"[roll] Au:{user_id} | Msg:{msg_id} | join")
+        _log.info(f"[roll.e] Au:{user_id} | Msg:{msg_id} | join")
     except:
         _log.exception(f"Err in roll event | {e.body}")
         text = f"err in roll event\n[e.body]\n```\n{e.body}\n```\n[err msg]\n```\n{traceback.format_exc()}\n```"
@@ -276,7 +276,7 @@ async def roll_check_task():
     msg_id = "none"
     guild_id = "none"
     try:
-        _log.info("[BOT.TASK] roll check begin")
+        # _log.info("[BOT.TASK] roll check begin")
         global RollLog
         RollLogTemp = copy.deepcopy(RollLog)
         for msg_id in RollLogTemp['msg']:
@@ -311,21 +311,32 @@ async def roll_check_task():
             text += "获得了本次奖品！🎉"
 
             #  删除抽奖消息
-            del RollLog['msg'][msg_id]
+            del RollLog['msg'][msg_id] # 到这里抽奖的msg就已经被删除了，下次抽奖不会再遍历这个用户
             # 结束，发送信息
-            cm = await get_card_msg(text,header_text=f"开奖菈！奖品「{rinfo['item']['name']}」")
-            ch = await bot.client.fetch_public_channel(rinfo['channel_id']) 
-            await ch.send(cm) # 发送开奖信息
+            try:
+                cm = await get_card_msg(text,header_text=f"开奖菈！奖品「{rinfo['item']['name']}」")
+                ch = await bot.client.fetch_public_channel(rinfo['channel_id']) # 获取开奖频道对象
+                await ch.send(cm) # 发送开奖信息
+            except Exception as result:
+                # 非已知报错，跳出循环
+                if '权限' not in str(result) or 'connect' not in str(result) or 'json' not in str(result):
+                    raise result
+                # 已知报错，打印较少信息，继续
+                _log.error(f"Err in roll check send | G:{guild_id} | Msg:{msg_id}\n{str(result)}")
+                debug_text = f"Err in roll check send\nG:{guild_id}\nMsg:{msg_id}\n```\n{str(result)}\n```"
+                await debug_ch.send(await get_card_msg(debug_text))
+                continue # 直接跳过
+
             _log.info(f"G:{guild_id} | Msg:{msg_id} | roll end success")
 
-        _log.info("[BOT.TASK] roll check  end")
+        # _log.info("[BOT.TASK] roll check  end")
 
     except Exception as result:
-        _log.exception(f"Err in roll check | {msg_id}")
+        _log.exception(f"Err in roll check | G:{guild_id} | Msg:{msg_id}")
         text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{traceback.format_exc()}\n```"
-        if '权限' in str(result): # 已知报错，打印较少信息
+        if '权限' in str(result) or 'connect' in str(result): # 已知报错，打印较少信息
             text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{str(result)}\n```"
-        await debug_ch.send(await get_card_msg(text)) # 未知错误，发送给debug频道
+        await debug_ch.send(await get_card_msg(text)) # 发送给debug频道
         
 
 ################################################################################
