@@ -25,7 +25,8 @@
 
 ## 私有部署
 
-保证python版本大于3.9，安装如下包
+保证python版本大于3.9，小于3.11，安装如下包
+
 ```
 pip3 install -r requirements.txt
 ```
@@ -38,7 +39,7 @@ pip3 install -r requirements.txt
 配置完毕以后，就可以运行bot了
 
 ```
-python3 main.py
+python3 rollbot.py
 ```
 
 ### 一键部署到replit
