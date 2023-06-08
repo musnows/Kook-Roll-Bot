@@ -1,11 +1,15 @@
 import traceback
 import json
+import aiohttp
 
 from khl import Message,Bot,ChannelPrivacyTypes
 from khl.card import Card,CardMessage,Module,Element,Types
 from typing import Union
 
 from .files import config,_log
+
+kook_base_url = "https://www.kookapp.cn"
+kook_headers = {f'Authorization': f"Bot {config['token']}"}
 
 async def get_card_msg(text:str,sub_text="",header_text="",err_card=False):
     """获取一个简单卡片的函数"""
@@ -85,3 +89,14 @@ async def roll_args_check(bot:Bot,msg:Message,num:str,roll_day:str):
         return False
     
     return True
+
+
+async def msg_view(msg_id: str):
+    """获取消息详情，判断消息是否已经被删除;删除了的code是40000"""
+    url = kook_base_url + "/api/v3/guild/view"
+    params = {"msg_id": msg_id}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params, headers=kook_headers) as response:
+            ret1 = json.loads(await response.text())
+            _log.debug(ret1)
+            return ret1

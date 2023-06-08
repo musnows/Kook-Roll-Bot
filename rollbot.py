@@ -12,7 +12,7 @@ from datetime import datetime,timedelta
 
 from utils.files import config,RollLog,StartTime,write_roll_log
 from utils.myLog import get_time,get_time_str_from_stamp,log_msg,_log
-from utils.argsCheck import get_card_msg,roll_args_check,upd_card
+from utils.argsCheck import get_card_msg,roll_args_check,upd_card,msg_view
 
 # 用读取来的 config 初始化 bot
 bot = Bot(token=config['token']) # websocket
@@ -50,6 +50,7 @@ async def help_card():
     text+= "**注意事项：**\n"
     text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n"
     text+= " 3.抽奖天数/小时可以设置为小数，比如半天设置为0.5\n 4.请勿在抽奖中@用户，否则视作全体成员抽奖\n"
+    text+= " 5.如果想**删除抽奖**，直接将机器人发送的抽奖信息删除即可。在结束时机器人会自动跳过被删除的抽奖消息"
     # 小字
     sub_text = f"开机于：{StartTime}  |  开源仓库：[Github](https://github.com/musnows/Kook-Roll-Bot)\n"
     sub_text+= "如有问题，请加入帮助频道咨询：[邀请链接](https://kook.top/gpbTwZ)"
@@ -198,6 +199,8 @@ async def roll_hour_cmd(msg:Message,name:str,num:str,roll_hour:str,*arg):
         await msg.reply(cm)
 
 
+################################################################################################################
+
 @bot.on_event(EventTypes.ADDED_REACTION)
 async def emoji_reaction_event(b:Bot,e:Event):
     """监测消息的表情回应"""
@@ -282,43 +285,53 @@ async def roll_check_task():
         global RollLog
         RollLogTemp = copy.deepcopy(RollLog)
         for msg_id in RollLogTemp['msg']:
-            guild_id = RollLogTemp['msg'][msg_id]['guild_id'] # 服务器id
-            rinfo = RollLogTemp['data'][guild_id][msg_id] 
-            # 1.已经结束了，重大err
-            if rinfo['join']['count'] != -1: 
-                del RollLog['msg'][msg_id] # 只删除消息id，不修改info
-                _log.critical(f"G:{guild_id} | Msg:{msg_id} | roll already end!")
-                continue
-            cur_time = datetime.now().timestamp()
-            # 2.没有超过结束时间，继续
-            if cur_time < rinfo['end_time']: 
-                continue 
-            # 3.抽奖时间到了,结束抽奖
-            vnum = rinfo['item']['num'] # 奖品数量
-            join_sz = len(RollLogTemp['msg'][msg_id]['user']) # 参与人数
-            RollLog['data'][guild_id][msg_id]['join']['count'] = join_sz
-            #   人数大于奖品数量
-            ran = []
-            if join_sz > vnum:
-                ran = random.sample(range(0, join_sz), vnum)  # 生成n个随机数
-            else:  # 生成一个从0到len-1的列表 如果只有一个用户，生成的是[0]
-                ran = list(range(join_sz))
-            #   开始遍历
-            text = "🎉 恭喜 "
-            for index in ran:
-                user_id = RollLogTemp['msg'][msg_id]['user'][index]
-                user_str = f"(met){user_id}(met) "
-                text += user_str
-                RollLog['data'][guild_id][msg_id]['join']['reward_user'].append(user_id)
-            text += "获得了本次奖品！🎉"
-
-            #  删除抽奖消息
-            del RollLog['msg'][msg_id] # 到这里抽奖的msg就已经被删除了，下次抽奖不会再遍历这个用户
-            # 结束，发送信息
             try:
+                guild_id = RollLogTemp['msg'][msg_id]['guild_id'] # 服务器id
+                rinfo = RollLogTemp['data'][guild_id][msg_id] 
+                # 1.已经结束了，重大err
+                if rinfo['join']['count'] != -1: 
+                    del RollLog['msg'][msg_id] # 只删除消息id，不修改info
+                    _log.critical(f"G:{guild_id} | Msg:{msg_id} | roll already end!")
+                    continue
+                cur_time = datetime.now().timestamp()
+                # 2.没有超过结束时间，继续
+                if cur_time < rinfo['end_time']: 
+                    continue 
+                # 3.抽奖时间到了,结束抽奖
+                # 先判断一下抽奖的这个信息还在不在，如果无法访问就认为是被删除或者机器人被踢了
+                msg_view_ret = await msg_view(msg_id)
+                if msg_view_ret['code'] != 0: # 有错误
+                    del RollLog['msg'][msg_id] # 只删除消息id，不修改info
+                    _log.warning(f"G:{guild_id} | Msg:{msg_id} | roll msg been deleted!")
+                    continue
+
+                # 正常开奖
+                vnum = rinfo['item']['num'] # 奖品数量
+                join_sz = len(RollLogTemp['msg'][msg_id]['user']) # 参与人数
+                RollLog['data'][guild_id][msg_id]['join']['count'] = join_sz
+                #   人数大于奖品数量
+                ran = []
+                if join_sz > vnum:
+                    ran = random.sample(range(0, join_sz), vnum)  # 生成n个随机数
+                else:  # 生成一个从0到len-1的列表 如果只有一个用户，生成的是[0]
+                    ran = list(range(join_sz))
+                #   开始遍历
+                text = "🎉 恭喜 "
+                for index in ran:
+                    user_id = RollLogTemp['msg'][msg_id]['user'][index]
+                    user_str = f"(met){user_id}(met) "
+                    text += user_str
+                    RollLog['data'][guild_id][msg_id]['join']['reward_user'].append(user_id)
+                text += "获得了本次奖品！🎉"
+
+                #  删除抽奖消息
+                del RollLog['msg'][msg_id] # 到这里抽奖的msg就已经被删除了，下次抽奖不会再遍历这个用户
+                # 结束，发送信息
                 cm = await get_card_msg(text,header_text=f"开奖菈！奖品「{rinfo['item']['name']}」")
                 ch = await bot.client.fetch_public_channel(rinfo['channel_id']) # 获取开奖频道对象
                 await ch.send(cm) # 发送开奖信息
+                # 成功结束
+                _log.info(f"G:{guild_id} | Msg:{msg_id} | roll end success")
             except Exception as result:
                 # 非已知报错，跳出循环
                 if '权限' not in str(result) or 'connect' not in str(result) or 'json' not in str(result):
@@ -328,11 +341,8 @@ async def roll_check_task():
                 debug_text = f"Err in roll check send\nG:{guild_id}\nMsg:{msg_id}\n```\n{str(result)}\n```"
                 await debug_ch.send(await get_card_msg(debug_text))
                 continue # 直接跳过
-
-            _log.info(f"G:{guild_id} | Msg:{msg_id} | roll end success")
-
+        
         # _log.info("[BOT.TASK] roll check  end")
-
     except Exception as result:
         _log.exception(f"Err in roll check | G:{guild_id} | Msg:{msg_id}")
         text = f"Err in roll check\nG:{guild_id}\nMsg:{msg_id}\n```\n{traceback.format_exc()}\n```"
