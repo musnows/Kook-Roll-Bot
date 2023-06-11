@@ -34,7 +34,7 @@ async def alive_check(msg:Message,*arg):
     try:
         log_msg(msg)
         await msg.reply(f"bot alive here")# 回复
-    except:
+    except Exception as result:
         _log.exception(f"Err in alive")
 
 async def help_card():
@@ -80,7 +80,7 @@ async def at_help_cmd(msg:Message):
             log_msg(msg)
             await msg.reply(await help_card())
             _log.info(f"Au:{msg.author_id} | at_help reply")
-    except:
+    except Exception as result:
         _log.exception(f"Err in at_help")
 
 ################################################################################
@@ -264,7 +264,7 @@ async def emoji_reaction_event(b:Bot,e:Event):
             
         # 结束用户加入
         _log.info(f"[roll.e] Au:{user_id} | Msg:{msg_id} | join")
-    except:
+    except Exception as result:
         _log.exception(f"Err in roll event | {e.body}")
         text = f"err in roll event\n[e.body]\n```\n{e.body}\n```\n[err msg]\n```\n{traceback.format_exc()}\n```"
         if '权限' in str(result) or 'connect' in str(result): # 已知报错，打印较少信息
