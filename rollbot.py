@@ -211,6 +211,7 @@ async def roll_hour_cmd(msg:Message,name:str,num:str,roll_hour:str,*arg):
 @bot.on_event(EventTypes.ADDED_REACTION)
 async def emoji_reaction_event(b:Bot,e:Event):
     """监测消息的表情回应"""
+    msg_id,guild_id = "none","none"
     try:
         global RollLog
         msg_id = e.body['msg_id'] # 消息ID
