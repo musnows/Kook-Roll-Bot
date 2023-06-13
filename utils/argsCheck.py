@@ -93,7 +93,7 @@ async def roll_args_check(bot:Bot,msg:Message,num:str,roll_day:str):
 
 async def msg_view(msg_id: str):
     """获取消息详情，判断消息是否已经被删除;删除了的code是40000"""
-    url = kook_base_url + "/api/v3/guild/view"
+    url = kook_base_url + "/api/v3/message/view"
     params = {"msg_id": msg_id}
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params, headers=kook_headers) as response:
