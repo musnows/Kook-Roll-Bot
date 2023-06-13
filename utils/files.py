@@ -54,12 +54,12 @@ config = open_file('./config/config.json')
 # 打开日志文件
 RollLogPath = './config/rollLog.json'
 """日志文件路径"""
-RollLog = {"data":{},"msg":{}}
-"""日志文件 {"data":{},"msg":{}}"""
+RollLog = {"data":{},"msg":{},'err_msg':{}}
+"""日志文件 {"data":{},"msg":{},'err_msg':{}}"""
 
 try:
     # 自动创建日志文件
-    if (not create_log_file(RollLogPath,RollLog )):
+    if (not create_log_file(RollLogPath,RollLog)):
         os._exit(1)  # err,退出进程
 
     # 创建日志文件成功，打开

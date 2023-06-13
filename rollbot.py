@@ -309,6 +309,7 @@ async def roll_check_task():
                 # 先判断一下抽奖的这个信息还在不在，如果无法访问就认为是被删除或者机器人被踢了
                 msg_view_ret = await msg_view(msg_id)
                 if msg_view_ret['code'] != 0: # 有错误
+                    RollLog['err_msg'][msg_id] = RollLog['msg'][msg_id] # 留档
                     del RollLog['msg'][msg_id] # 只删除消息id，不修改info
                     _log.warning(f"G:{guild_id} | Msg:{msg_id} | roll msg been deleted!")
                     continue
