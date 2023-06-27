@@ -254,9 +254,17 @@ async def emoji_reaction_event(b:Bot,e:Event):
         elif str_index != -1: 
             emoji = f"`{e.body['emoji']['id']}`"
         text+= f"\n「添加回应 {emoji}」抽奖参与成功！"
-        cm = await get_card_msg(text)
-        await ch.send(cm,temp_target_id=user_id) # 发送信息提示用户
-
+        # 避免无法发送服务器表情带来的错误
+        try:
+            cm = await get_card_msg(text)
+            await ch.send(cm,temp_target_id=user_id) # 发送信息提示用户
+        except Exception as result:
+            if '表情' in str(result):
+                cm =  await get_card_msg(text.replace('(met)','`')) # 不发送id
+                await ch.send(cm,temp_target_id=user_id) # 发送信息提示用户
+            else:
+                raise result
+        # 避免权限问题而无法更新的错误
         try:
             # 再次计算剩余时间
             time_diff = rinfo['end_time'] - datetime.now().timestamp()
