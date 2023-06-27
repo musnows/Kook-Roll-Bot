@@ -1,5 +1,6 @@
 import sys
 import logging # 采用logging来替换所有print
+from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime,timezone,timedelta
 from khl import Message,PrivateMessage
 
@@ -56,10 +57,14 @@ logging.basicConfig(level=logging.INFO,
 # 获取一个logger对象
 _log = logging.getLogger(LOGGER_NAME)
 """自定义的logger对象"""
-# 实例化控制台handler和文件handler，同时输出到控制台和文件
-# cmd_handler = logging.StreamHandler() # 默认设置里面，就会往控制台打印信息;自己又加一个，导致打印俩次
+# 1.实例化控制台handler和文件handler，同时输出到控制台和文件
 file_handler = logging.FileHandler(LOGGER_FILE, mode="a", encoding="utf-8")
 fmt = logging.Formatter(fmt="[%(asctime)s] %(levelname)s:%(filename)s:%(funcName)s:%(lineno)d | %(message)s",
                     datefmt="%y-%m-%d %H:%M:%S")
 file_handler.setFormatter(fmt)
-_log.addHandler(file_handler)
+# 2.按每天来自动生成日志文件的备份
+log_handler = TimedRotatingFileHandler(LOGGER_FILE, when='D')
+log_handler.setFormatter(fmt)
+# 3.添加个日志处理器
+# _log.addHandler(file_handler) # 这个不用加，时间的日志处理器已经有这个功能了
+_log.addHandler(log_handler)
