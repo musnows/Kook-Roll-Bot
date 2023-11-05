@@ -246,14 +246,14 @@ async def emoji_reaction_event(b:Bot,e:Event):
         RollLog['msg'][msg_id]['user'].append(user_id) 
         # - 1：通用emoji
         emoji = e.body['emoji']['id'] 
-        str_index = e.body['emoji']['id'].find('/')
-        # - 2：找到了/，且没有第二个/，说明是服务器表情
-        if str_index != -1 and e.body['emoji']['id'].find('/',str_index+1) == -1:
-            emoji = f"(emj){e.body['emoji']['name']}(emj)[{e.body['emoji']['id']}]"
-        # - 3：用户表情，发送原始ID
-        elif str_index != -1: 
-            emoji = f"`{e.body['emoji']['id']}`"
-        text+= f"\n「添加回应 {emoji}」抽奖参与成功！"
+        # str_index = e.body['emoji']['id'].find('/')
+        # # - 2：找到了/，且没有第二个/，说明是服务器表情
+        # if str_index != -1 and e.body['emoji']['id'].find('/',str_index+1) == -1:
+        #     emoji = f"(emj){e.body['emoji']['name']}(emj)[{e.body['emoji']['id']}]"
+        # # - 3：用户表情，发送原始ID
+        # elif str_index != -1: 
+        #     emoji = f"`{e.body['emoji']['id']}`"
+        text+= f"\n「添加回应 `{emoji}`」抽奖参与成功！"
         # 避免无法发送服务器表情带来的错误
         try:
             cm = await get_card_msg(text)
