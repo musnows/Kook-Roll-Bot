@@ -63,7 +63,7 @@ fmt = logging.Formatter(fmt="[%(asctime)s] %(levelname)s:%(filename)s:%(funcName
                     datefmt="%y-%m-%d %H:%M:%S")
 file_handler.setFormatter(fmt)
 # 2.按每天来自动生成日志文件的备份
-log_handler = TimedRotatingFileHandler(LOGGER_FILE, when='D')
+log_handler = TimedRotatingFileHandler(LOGGER_FILE, when='D',interval=3)
 log_handler.setFormatter(fmt)
 # 3.添加个日志处理器
 # _log.addHandler(file_handler) # 这个不用加，时间的日志处理器已经有这个功能了
