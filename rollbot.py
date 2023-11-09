@@ -38,7 +38,7 @@ async def alive_check(msg:Message,*arg):
     except Exception as result:
         _log.exception(f"Err in alive")
 
-async def help_card():
+async def help_card(help_text=""):
     # 信息主体
     text = "" if not "notice" in config else config["notice"]
     text+= "\n「/alive」看看bot是否在线\n"
@@ -51,7 +51,9 @@ async def help_card():
     text+= "**注意事项：**\n"
     text+= " 1.奖品名字必须带上英文双引号\n 2.角色组可以不指定，即所有人可参加\n"
     text+= " 3.抽奖天数/小时可以设置为小数，比如半天设置为0.5\n 4.请勿在抽奖中@用户，否则视作全体成员抽奖\n"
-    text+= " 5.如果想**删除抽奖**，直接将机器人发送的抽奖信息删除即可。在结束时机器人会自动跳过被删除的抽奖消息"
+    text+= " 5.如果想**删除抽奖**，直接将机器人发送的抽奖信息删除即可。在结束时机器人会自动跳过被删除的抽奖消息;"
+    if help_text != "": # 不为空时才添加help文字
+        text+= f"\n{help_text}"
     # 小字
     sub_text = f"开机于：{StartTime}  |  开源仓库：[Github](https://github.com/musnows/Kook-Roll-Bot)\n"
     sub_text+= "如有问题，请加入帮助频道咨询：[邀请链接](https://kook.top/gpbTwZ)"
@@ -62,11 +64,19 @@ async def help_card():
 async def help_cmd(msg:Message,*arg):
     try:
         log_msg(msg)
-        await msg.reply(await help_card())
+        help_text = ""
+        if msg.author_id in config['admin_user']: # 管理员会有额外提示
+            help_text="「/fflush」管理员命令，强制刷新数据到文件中。可选项`-kill`让机器人进程自行终止。\n"
+            help_text+= " 注意：fflush命令异常时也会终止机器人进程！"
+        # 发送消息卡片
+        await msg.reply(await help_card(help_text))
         _log.info(f"Au:{msg.author_id} | help reply")
     except Exception as result:
         _log.exception(f"Err in help")
         await msg.reply(await get_card_msg(f"ERR! [{get_time()}] help",err_card=True))
+
+BOT_USER_ID = ""
+"""机器人用户ID"""
 
 @bot.on_message()
 async def at_help_cmd(msg:Message):
@@ -75,11 +85,15 @@ async def at_help_cmd(msg:Message):
         # kook系统通知，忽略
         if msg.author_id == "3900775823": return
         # 要求只是存粹at机器人的时候才回复，字数大概为20字
-        elif len(msg.content) >= 22: return
-        # 获取机器人的用户对象
-        cur_bot = await bot.client.fetch_me()
-        if f"(met){cur_bot.id}(met)" in msg.content:
-            log_msg(msg)
+        if len(msg.content) > 22: return
+        global BOT_USER_ID
+        # 获取机器人的用户对象，主要是取用户ID
+        if BOT_USER_ID == "":
+            cur_bot = await bot.client.fetch_me()
+            BOT_USER_ID = cur_bot.id
+        # 判断机器人用户ID是否在文字内
+        if f"(met){BOT_USER_ID}(met)" in msg.content:
+            log_msg(msg) # 记录消息
             await msg.reply(await help_card())
             _log.info(f"Au:{msg.author_id} | at_help reply")
     except Exception as result:
@@ -400,9 +414,9 @@ async def save_log_file_cmd(msg:Message,*arg):
     try:
         log_msg(msg)
         if msg.author_id not in config['admin_user']:
-            return # 非管理员
+            return # 非管理员，跳出
         await write_roll_log(log_info="[FFLUSH.CMD]")
-        is_kill = '-kill' in arg # 是否停止运行
+        is_kill = '-kill' in arg # 是否需要停止运行？
         text = "写入数据文件成功"
         if is_kill:
             text += "\n收到`kill`命令，机器人退出"
@@ -415,6 +429,7 @@ async def save_log_file_cmd(msg:Message,*arg):
     except:
         _log.exception(f'err in fflush | Au:{msg.author_id}')
         await msg.reply(f"err\n```\n{traceback.format_exc()}\n```")
+        os.abort() # 该命令执行有问题也需要退出
 
 # 开机 （如果是主文件就开机）
 if __name__ == '__main__':
